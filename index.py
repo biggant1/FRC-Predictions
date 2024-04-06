@@ -1,24 +1,22 @@
 import tba
 from tqdm import tqdm
 from predictors import *
+import numpy as np
 
 def main():
-    results = []
     events = tba.read_events_from_file("events.csv")
 
+    wins = []
+    alliance_numbers = []
     for event in events:
-        try:
-            alliances = tba.get_event_alliances(event)
-            predicted_winner = predict_winning_alliance(alliances, by_partial_rankings)
-            actual_winner = tba.get_winning_alliance(event)
-            if predicted_winner == actual_winner:
-                results.append(1)
-            else:
-                results.append(0)
-        except Exception as e:
-            print("failed", event)
+        alliances = tba.get_event_alliances_with_extra_data(event)
+        for status, alliance in alliances:
+            wins.append(get_playoffs_wins(status))
+            alliance_numbers.append(alliance.alliance_number)
 
-    print(f"Accuracy: {sum(results) / len(results)}")
+    r = np.corrcoef(wins, alliance_numbers)[0][1]
+    r_square = r ** 2 
+    print(f"{r=} {r_square=}")
 
 if __name__ == "__main__":
     main()

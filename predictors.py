@@ -1,5 +1,6 @@
 import tba
 from typing import Callable
+from typing import Any
 
 def predict_alliances_by_rank(ranking: list[tba.Team]) -> list[tba.Alliance]:
     """Assume each team always picks the highest ranked team available"""
@@ -38,3 +39,13 @@ def by_total_rankings(alliance: tba.Alliance) -> int:
 
 def by_partial_rankings(alliance: tba.Alliance) -> int:
     return alliance.captain.ranking + alliance.first_pick.ranking
+
+def get_playoffs_distance(status: str, double_elim_round: str) -> int:
+    if status == "won":
+        return 7
+    if double_elim_round == "Finals":
+        return 6
+    return int(double_elim_round[-1])
+
+def get_playoffs_wins(status: dict[str, Any]) -> int:
+    return status["record"]["wins"]

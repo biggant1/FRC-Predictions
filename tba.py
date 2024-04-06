@@ -2,6 +2,7 @@ import requests
 import os
 from dotenv import load_dotenv
 from dataclasses import dataclass
+from typing import Any
 load_dotenv()
 
 TBA_BASE_PATH = "https://www.thebluealliance.com/api/v3"
@@ -65,10 +66,20 @@ def get_event_alliances(event_key: str) -> list[Alliance]:
         alliances.append(Alliance(team_key_to_team[picks[0]], team_key_to_team[picks[1]], team_key_to_team[picks[2]], i+1))
     return alliances
 
-def get_winning_alliance(event_key: str) -> Alliance:
+def get_event_alliances_with_extra_data(event_key: str) -> list[tuple[dict[str, Any], Alliance]]:
+    """Returns status, alliance"""
     data = request(f"/event/{event_key}/alliances")
     team_key_to_team = __team_key_to_team_map(event_key)
+    alliances = []
     for i, alliance in enumerate(data):
-        if alliance["status"]["status"] == "won":
-            picks = alliance["picks"]
-            return Alliance(team_key_to_team[picks[0]], team_key_to_team[picks[1]], team_key_to_team[picks[2]], i+1)
+        picks = alliance["picks"]
+        alliances.append((alliance["status"], 
+                          Alliance(team_key_to_team[picks[0]], 
+                                   team_key_to_team[picks[1]], team_key_to_team[picks[2]], i+1)))
+    return alliances
+
+def get_winning_alliance(event_key: str) -> Alliance:
+    alliances_with_results = get_event_alliances_with_extra_data(event_key)
+    for status, alliance in alliances_with_results:
+        if status["status"] == "won":
+            return alliance
